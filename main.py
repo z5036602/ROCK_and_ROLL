@@ -7,17 +7,16 @@ Created on Wed Nov 13 00:08:15 2019
 """
 import pandas as pd 
 import os
-import statistics as stats
+
 import numpy as np
 from sklearn.preprocessing import StandardScaler 
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
 ##get acitivity data
 def get_activity_data(file_path):
     all_path = os.listdir(file_path)
     activity_data = {}
     fea = [] 
-    acitivity_ratio_list = []
-    user_name_list = []
     for path in all_path:
         csv_full_path = os.path.join(file_path,path)
         df = pd.read_csv(csv_full_path)
@@ -178,7 +177,6 @@ def Flourishing_score(file_path):
     csv_full_path = os.path.join(file_path,'FlourishingScale.csv')
     post_flourishing_score_dictionary = {}
     pre_flourishing_score_dictionary = {}
-    flourishing_score_dictionary = []
    
     my_list = []
     
@@ -345,7 +343,11 @@ if __name__ == "__main__":
     x_train_positive=scaler.fit_transform(x_train_positive)
     x_train_negative=scaler.fit_transform(x_train_negative)
     x_train_flurishing=scaler.fit_transform(x_train_flurishing)
-    train_test_split()
-
+    positive_x_train,positive_x_test,positive_y_train,positive_y_test = train_test_split(x_train_positive,y_train_pos_score,test_size = 0.2,random_state = 1)
+    negative_x_train,negative_x_test,negative_y_train,negative_y_test = train_test_split(x_train_negative,y_train_neg_score,test_size = 0.2,random_state = 1)
+    flourishing_x_train,flourishing_x_test,flourishing_y_train,flourishing_y_test = train_test_split(x_train_flurishing,y_train_flourishing,test_size = 0.2,random_state = 1)
+    model = SVC()
+    model.fit(x_train,y_train)
+    
     
     

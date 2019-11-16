@@ -9,6 +9,8 @@ import pandas as pd
 import os
 import statistics as stats
 import numpy as np
+from sklearn.preprocessing import StandardScaler 
+from sklearn.cross_validation import train_test_split
 ##get acitivity data
 def get_activity_data(file_path):
     all_path = os.listdir(file_path)
@@ -270,16 +272,51 @@ if __name__ == "__main__":
     d_get_bluetooth = get_bluetooth("/Users/joshualiu/Desktop/Rock_and_Roll/StudentLife_Dataset/Inputs/sensing/bluetooth")
     flourishing_score = Flourishing_score("/Users/joshualiu/Desktop/Rock_and_Roll/StudentLife_Dataset/Outputs")
     positive_score,negative_score = panas_score("/Users/joshualiu/Desktop/Rock_and_Roll/StudentLife_Dataset/Outputs")
+    
+    flourishing_score_list = list(flourishing_score.values())
+    positive_score_list = list(positive_score.values())
+    negative_score_list = list(negative_score.values())
+    
+    
+    
+    
+    flourishing_median = np.median(flourishing_score_list)
+    positive_score_median = np.median(positive_score_list)
+    negative_score_median = np.median(negative_score_list)
+    y_train_flourishing = []
+    y_train_neg_score = []
+    y_train_pos_score = []
+    
+   
+    
+    for value in flourishing_score.values():
+        if value >flourishing_median:
+            y_train_flourishing.append(1)
+        else:
+            y_train_flourishing.append(0)
+            
+    for value in positive_score.values():
+        if value >positive_score_median:
+            y_train_pos_score.append(1)
+        else:
+            y_train_pos_score.append(0)
+            
+    for value in negative_score.values():
+        if value >negative_score_median:
+            y_train_neg_score.append(1)
+        else:
+            y_train_neg_score.append(0)
+    
     x_train_flurishing = []
     for i in range(60):
         u="u{:02d}".format(i)
         if u not in flourishing_score:
             continue;
         fea=d_activity[u]+d_audio[u]+d_conversation[u]+d_dark[u]+d_phone_lock[u] \
-        +d_innout[u]+d_get_bluetooth[u]+flourishing_score[u]
+        +d_innout[u]+d_get_bluetooth[u]
 #        
         x_train_flurishing.append(fea)
-    flourishing_score_spreadsheet = np.array(x_train_flurishing)
+    x_train_flurishing = np.array(x_train_flurishing)
     
     x_train_positive = []
     x_train_negative = []
@@ -298,5 +335,17 @@ if __name__ == "__main__":
         x_train_negative.append(d_activity[u]+d_audio[u]+d_conversation[u]+d_dark[u]+d_phone_lock[u] \
         +d_innout[u]+d_get_bluetooth[u]+negative_score[u])
         
-    postiive_score_spreadsheet = np.array(x_train_positive)
-    negative_score_spreadsheet = np.array(x_train_negative)
+    x_train_positive = np.array(x_train_positive)
+    x_train_negative = np.array(x_train_negative)
+    
+    
+    
+    #######normalization 
+    scaler = StandardScaler()
+    x_train_positive=scaler.fit_transform(x_train_positive)
+    x_train_negative=scaler.fit_transform(x_train_negative)
+    x_train_flurishing=scaler.fit_transform(x_train_flurishing)
+    train_test_split()
+
+    
+    

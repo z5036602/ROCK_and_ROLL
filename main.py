@@ -12,6 +12,10 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler 
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+from sklearn.model_selection import KFold
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import accuracy_score
+
 ##get acitivity data
 def get_activity_data(file_path):
     all_path = os.listdir(file_path)
@@ -181,7 +185,7 @@ def Flourishing_score(file_path):
     my_list = []
     
     df = pd.read_csv(csv_full_path)
-    numpy_matrix = df.fillna(df.mean()).to_numpy()
+    numpy_matrix = df.fillna(0).to_numpy()
     list_flourishing_score = np.sum(numpy_matrix[:,2:9], 1)
     post_index = np.where(numpy_matrix[:,1] == 'post')
     pre_index = np.where(numpy_matrix[:,1] == 'pre')
@@ -223,7 +227,7 @@ def panas_score(file_path):
     my_list = [] 
     
     df = pd.read_csv(csv_full_path)
-    numpy_matrix = df.fillna(df.mean()).to_numpy()
+    numpy_matrix = df.fillna(0).to_numpy()
     list_positive_score = np.sum(numpy_matrix[:,[2,5,9,10,12,13,15,16,18]], 1)
     list_negative_score= np.sum(numpy_matrix[:,[3,4,6,7,8,11,14,17,19]], 1)
     post_index = np.where(numpy_matrix[:,1] == 'post')
@@ -256,7 +260,19 @@ def panas_score(file_path):
    
     return panas_positive_score_dictionary,panas_negative_score_dictionary
 
+def validation_function(train_features,train_label,model):
+    train_label = np.array(train_label)
+    acc_sum = 0;
+    for train_index, test_index in kf.split(train_features):
+        X_train, X_test = train_features[train_index], train_features[test_index]
+        y_train, y_test = train_label[train_index], train_label[test_index]
+        model.fit(X_train, y_train) 
+        predication = model.predict(X_test)
+        ###here I just used accuracy, as data samples small, sometimes precison or recall is zero.
+        acc_sum = acc_sum+accuracy_score(y_test, predication)
         
+    return acc_sum/10
+ 
 if __name__ == "__main__": 
     
     #print(Flourishing_score("/Users/joshualiu/Desktop/GroupProject/StudentLife_Dataset/Outputs"))
@@ -305,6 +321,8 @@ if __name__ == "__main__":
         else:
             y_train_neg_score.append(0)
     
+    
+    
     x_train_flurishing = []
     for i in range(60):
         u="u{:02d}".format(i)
@@ -346,8 +364,73 @@ if __name__ == "__main__":
     positive_x_train,positive_x_test,positive_y_train,positive_y_test = train_test_split(x_train_positive,y_train_pos_score,test_size = 0.2,random_state = 1)
     negative_x_train,negative_x_test,negative_y_train,negative_y_test = train_test_split(x_train_negative,y_train_neg_score,test_size = 0.2,random_state = 1)
     flourishing_x_train,flourishing_x_test,flourishing_y_train,flourishing_y_test = train_test_split(x_train_flurishing,y_train_flourishing,test_size = 0.2,random_state = 1)
-    model = SVC()
-    model.fit(x_train,y_train)
+    
+    ##positive
+    validation_train_AUC_score = {}
+    kf = KFold(n_splits = 10)
+    model_positive = SVC(kernel='linear',gamma='auto')
+    acc_linear = validation_function(positive_x_train,positive_y_train,model_positive)
+    validation_train_AUC_score['linear'] = (acc_linear);
+
+    
+    model_positive = SVC(kernel='rbf',gamma='auto')
+    acc_rbf = validation_function(positive_x_train,positive_y_train,model_positive)
+    validation_train_AUC_score['rbf'] = (acc_rbf);
+    
+    model_positive = SVC(kernel='poly',gamma='auto')
+    acc_poly = validation_function(positive_x_train,positive_y_train,model_positive)
+    validation_train_AUC_score['poly'] = (acc_poly);
     
     
+    best_kernal = max(validation_train_AUC_score, key=validation_train_AUC_score.get)
+    model_positive = SVC(kernel=best_kernal,gamma='auto')
+    model_positive.fit(positive_x_train,positive_y_train)
+    positive_y_test_pred = model_positive.predict(positive_x_test)
+    print('acc of SVM on Panas positive:',accuracy_score(positive_y_test, positive_y_test_pred))
+        
+    ##negative
+    validation_train_AUC_score = {}
+    kf = KFold(n_splits = 10)
+    model_negative = SVC(kernel='linear',gamma='auto')
+    acc_linear = validation_function(negative_x_train,negative_y_train,model_negative)
+    validation_train_AUC_score['linear'] = (acc_linear);
+
     
+    model_negative = SVC(kernel='rbf',gamma='auto')
+    acc_rbf = validation_function(negative_x_train,negative_y_train,model_negative)
+    validation_train_AUC_score['rbf'] = (acc_rbf);
+    
+    model_negative = SVC(kernel='poly',gamma='auto')
+    acc_poly = validation_function(negative_x_train,negative_y_train,model_negative)
+    validation_train_AUC_score['poly'] = (acc_poly);
+    
+    
+    best_kernal = max(validation_train_AUC_score, key=validation_train_AUC_score.get)
+    model_positive = SVC(kernel=best_kernal,gamma='auto')
+    model_positive.fit(negative_x_train,negative_y_train)
+    negative_y_test_pred = model_positive.predict(negative_x_test)
+    print('acc of SVM on Panas negative:',accuracy_score(negative_y_test, negative_y_test_pred))
+##    
+##    #flourishing
+    validation_train_AUC_score = {}
+    kf = KFold(n_splits = 10)
+    model_flourishing = SVC(kernel='linear',gamma='auto')
+    acc_linear = validation_function(flourishing_x_train,flourishing_y_train,model_flourishing)
+    validation_train_AUC_score['linear'] = (acc_linear);
+
+    
+    model_flourishing = SVC(kernel='rbf',gamma='auto')
+    acc_rbf = validation_function(flourishing_x_train,flourishing_y_train,model_flourishing)
+    validation_train_AUC_score['rbf'] = (acc_rbf);
+    
+    model_flourishing = SVC(kernel='sigmoid',gamma='auto')
+    acc_poly = validation_function(flourishing_x_train,flourishing_y_train,model_flourishing)
+    validation_train_AUC_score['poly'] = (acc_poly);
+    
+    
+    best_kernal = max(validation_train_AUC_score, key=validation_train_AUC_score.get)
+    model_flourishing = SVC(kernel=best_kernal,gamma='auto')
+    model_flourishing.fit(flourishing_x_train,flourishing_y_train)
+    flourishing_y_test_pred = model_flourishing.predict(flourishing_x_test)
+    print('acc of SVM on flourishing:',accuracy_score(flourishing_y_test, flourishing_y_test_pred))
+##    

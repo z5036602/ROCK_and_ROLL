@@ -186,7 +186,7 @@ def Flourishing_score(file_path):
     
     df = pd.read_csv(csv_full_path)
     numpy_matrix = df.fillna(0).to_numpy()
-    list_flourishing_score = np.sum(numpy_matrix[:,2:9], 1)
+    list_flourishing_score = np.sum(numpy_matrix[:,2:10], 1)
     post_index = np.where(numpy_matrix[:,1] == 'post')
     pre_index = np.where(numpy_matrix[:,1] == 'pre')
     flourishing_score_change = {}

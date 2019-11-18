@@ -216,45 +216,48 @@ def get_wifi_location(file_path):
 
 ##flourishing score: $post-pre%
 def Flourishing_score(file_path):
+    # pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
     csv_full_path = os.path.join(file_path, 'FlourishingScale.csv')
     post_flourishing_score_dictionary = {}
     pre_flourishing_score_dictionary = {}
     flourishing_score_dictionary = []
 
     my_list = []
-    df = pd.read_csv(csv_full_path)
-    print(df)
-    exit()
-    new_df = df.dropna(axis=0, how='any', inplace=False)
-    numpy_matrix = df.fillna(df.mean()).to_numpy()
-    list_flourishing_score = np.sum(numpy_matrix[:, 2:9], 1)
-    post_index = np.where(numpy_matrix[:, 1] == 'post')
-    pre_index = np.where(numpy_matrix[:, 1] == 'pre')
+    df = pd.read_csv(csv_full_path, index_col=False)
+    new_numpy_matrix = df.dropna(axis=0, how='any', inplace=False).to_numpy()
+    # user_counts = numpy_matrix['uid'].unique()
+    # remove_list = ['u51', 'u18', 'u57', 'u13', 'u00', 'u47', 'u22', 'u39', 'u12', 'u50', 'u58']
+    # rest = list(set(user_counts) ^ set(remove_list))
+    # new_numpy_matrix = numpy_matrix[numpy_matrix['uid'].isin(rest)].to_numpy()
+    list_flourishing_score = np.sum(new_numpy_matrix[:, 2:10], 1)
+    post_index = np.where(new_numpy_matrix[:, 1] == 'post')
+    pre_index = np.where(new_numpy_matrix[:, 1] == 'pre')
     flourishing_score_change = {}
     for index in np.nditer(post_index):
-        key = numpy_matrix[index, 0]
+        key = new_numpy_matrix[index, 0]
         post_flourishing_score_dictionary[key] = list_flourishing_score[index]
-        # print('key_is:',key)
-
     for index in np.nditer(pre_index):
-        key = numpy_matrix[index, 0]
+        key = new_numpy_matrix[index, 0]
         pre_flourishing_score_dictionary[key] = list_flourishing_score[index]
-        # print('key_is:',key)
-    for key in post_flourishing_score_dictionary:
 
-        #        u="u{:02d}".format(i)
-        if key not in pre_flourishing_score_dictionary:
-            continue;
-        change = post_flourishing_score_dictionary[key] - pre_flourishing_score_dictionary[key]
-        my_list = [change]
-        flourishing_score_change[key] = my_list
-    #        fea=d_activity[u]+d_audio[u]+d_conversation[u]+d_dark[u]+d_phone_lock[u] \
-    #        +d_innout[u]+d_get_bluetooth[u]
-    # print(type(flourishing_score_change[key]))
-    #        x_train.append(fea)
-    # print(type(flourishing_score_change[key]))
-    print(flourishing_score_change)
+    if len(post_flourishing_score_dictionary)>= len(pre_flourishing_score_dictionary):
+        for key in post_flourishing_score_dictionary:
+            if key not in pre_flourishing_score_dictionary:
+                continue;
+            change = post_flourishing_score_dictionary[key] - pre_flourishing_score_dictionary[key]
+            my_list = [change]
+            flourishing_score_change[key] = my_list
+    else:
+        for key in pre_flourishing_score_dictionary:
+            if key not in post_flourishing_score_dictionary:
+                continue;
+            change = post_flourishing_score_dictionary[key] - pre_flourishing_score_dictionary[key]
+            my_list = [change]
+            flourishing_score_change[key] = my_list
+    # print(flourishing_score_change)
     return flourishing_score_change
+
 
 
 ##panas score: $post-pre% for postive and negative
@@ -268,8 +271,8 @@ def panas_score(file_path):
     panas_negative_score_dictionary = {}
     my_list = []
 
-    df = pd.read_csv(csv_full_path)
-    numpy_matrix = df.fillna(df.mean()).to_numpy()
+    df = pd.read_csv(csv_full_path, index_col=False)
+    numpy_matrix = df.dropna(axis=0, how='any', inplace=False).to_numpy()
     list_positive_score = np.sum(numpy_matrix[:, [2, 5, 9, 10, 12, 13, 15, 16, 18]], 1)
     list_negative_score = np.sum(numpy_matrix[:, [3, 4, 6, 7, 8, 11, 14, 17, 19]], 1)
     post_index = np.where(numpy_matrix[:, 1] == 'post')
@@ -284,21 +287,32 @@ def panas_score(file_path):
         pre_pos_panas_score_dictionary[key] = list_positive_score[index]
         pre_neg_panas_score_dictionary[key] = list_negative_score[index]
 
-    for key in post_pos_panas_score_dictionary:
-        if key not in pre_pos_panas_score_dictionary:
-            continue;
-        pos_change = post_pos_panas_score_dictionary[key] - pre_pos_panas_score_dictionary[key]
-        neg_change = post_neg_panas_score_dictionary[key] - pre_neg_panas_score_dictionary[key]
-        my_list = [pos_change]
-        panas_positive_score_dictionary[key] = my_list
-        my_list = [neg_change]
-        panas_negative_score_dictionary[key] = my_list
+    if len(post_pos_panas_score_dictionary) >= len(pre_pos_panas_score_dictionary):
+        for key in post_pos_panas_score_dictionary:
+            if key not in pre_pos_panas_score_dictionary:
+                continue;
+            pos_change = post_pos_panas_score_dictionary[key] - pre_pos_panas_score_dictionary[key]
+            neg_change = post_neg_panas_score_dictionary[key] - pre_neg_panas_score_dictionary[key]
+            my_list = [pos_change]
+            panas_positive_score_dictionary[key] = my_list
+            my_list = [neg_change]
+            panas_negative_score_dictionary[key] = my_list
+    else:
+        for key in pre_pos_panas_score_dictionary:
+            if key not in post_pos_panas_score_dictionary:
+                continue;
+            pos_change = post_pos_panas_score_dictionary[key] - pre_pos_panas_score_dictionary[key]
+            neg_change = post_neg_panas_score_dictionary[key] - pre_neg_panas_score_dictionary[key]
+            my_list = [pos_change]
+            panas_positive_score_dictionary[key] = my_list
+            my_list = [neg_change]
+            panas_negative_score_dictionary[key] = my_list
 
+    print((panas_positive_score_dictionary))
     ##
     ##        x_train.append(fea)
 
     return panas_positive_score_dictionary, panas_negative_score_dictionary
-
 
 if __name__ == "__main__":
 

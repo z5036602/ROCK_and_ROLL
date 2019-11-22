@@ -457,7 +457,7 @@ print("Accuracy: ", accuracy_score(y_panas_pos_test, y_panas_pos_pred))
 # In[20]:
 
 
-clf_panas_neg = GridSearchCV(tree.DecisionTreeClassifier(criterion="entropy",class_weight="balanced"),{'max_depth':range(3,30), 'min_samples_leaf':range(5,40),'min_impurity_decrease': {} },cv=10)
+clf_panas_neg = GridSearchCV(tree.DecisionTreeClassifier(criterion="entropy",class_weight="balanced"),{'max_depth':range(3,30), 'min_samples_leaf':range(5,40) },cv=10)
 clf_panas_neg.fit(x_panas_neg_train, y_panas_neg_train)
 clf_panas_neg_best = clf_panas_neg.best_estimator_
 print(clf_panas_neg.best_score_, clf_panas_neg.best_params_)

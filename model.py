@@ -4,6 +4,11 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
+from pandas.plotting import scatter_matrix
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 
 dataset_path = os.getcwd()
 
@@ -199,8 +204,12 @@ def normalize_feature(df, feature_name):
 
 def convert_to_binary_label(df, feature_name):
     median = df[feature_name].median()
-    df.loc[df[feature_name] < median, feature_name] = 0
-    df.loc[df[feature_name] >= median, feature_name] = 1
+
+    zero_index_list = df[feature_name] < median
+    one_index_list = df[feature_name] >= median 
+
+    df.loc[zero_index_list, feature_name] = 0
+    df.loc[one_index_list, feature_name] = 1
     return None
 
 def get_features_and_labels(df):
@@ -209,6 +218,8 @@ def get_features_and_labels(df):
     return feature_data, label_data    
 
 def predict_flourishing_score():
+    print('Predict Flourishing Score')
+
     processed_data_file_name = 'flourishing_score_data.csv'
 
     if not os.path.exists(processed_data_file_name):
@@ -225,17 +236,14 @@ def predict_flourishing_score():
     convert_to_binary_label(df, 'fl_score')
 
     for feature in df.columns[1:]:
-        print('normalizing ', feature)
         normalize_feature(df, feature)
 
-    training_data = df[:27]
-    test_data = df[27:]
-    
-    train_feature_data, train_label_data = get_features_and_labels(training_data)
-    test_feature_data, test_label_data = get_features_and_labels(test_data)
 
-    print(train_feature_data.describe())
-    print(train_label_data.describe())
+    feature_data, label_data = get_features_and_labels(df)
+
+
+    train_feature_data, test_feature_data, train_label_data, test_label_data = train_test_split(feature_data, label_data, test_size = 0.2, random_state = 1)
+    
 
     model = LogisticRegression(solver = 'liblinear')
     model.fit(train_feature_data, train_label_data)
@@ -247,6 +255,85 @@ def predict_flourishing_score():
 
     get_metric_scores(train_label_data, train_pred_prob, train_pred, test_label_data, test_pred_prob, test_pred)
 
+    print('****************************************')
+
+
+def predict_panas_pos():
+    print('Predict Panas Positive')
+
+    processed_data_file_name = 'panas_pos_score_data.csv'
+
+    if not os.path.exists(processed_data_file_name):
+        panas_positive_diff, _, _, _ = get_panas_score(dataset_path)
+        #taking only flourishing_score_diff for now
+        df = pd.DataFrame.from_dict(panas_positive_diff, orient='index')
+        df.columns = ['pos_panas']
+        add_input_features(df)
+        df.to_csv(processed_data_file_name, header=True)
+    else:
+        print('did not read original files')
+        df = pd.read_csv(processed_data_file_name, index_col = 0)
+
+    convert_to_binary_label(df, 'pos_panas')
+
+    for feature in df.columns[1:]:
+        normalize_feature(df, feature)
+
+    feature_data, label_data = get_features_and_labels(df)
+
+    train_feature_data, test_feature_data, train_label_data, test_label_data = train_test_split(feature_data, label_data, test_size = 0.2, random_state = 1)
+
+    model = LogisticRegression(solver = 'liblinear')
+    model.fit(train_feature_data, train_label_data)
+
+    train_pred = model.predict(train_feature_data)
+    train_pred_prob = np.array([val[1] for val in model.predict_proba(train_feature_data)])  
+    test_pred = model.predict(test_feature_data)
+    test_pred_prob = np.array([val[1] for val in model.predict_proba(test_feature_data)])
+
+    get_metric_scores(train_label_data, train_pred_prob, train_pred, test_label_data, test_pred_prob, test_pred)
+
+    print('****************************************')
+
+
+def predict_panas_neg():
+    print('Predict Panas Negative')
+
+    processed_data_file_name = 'panas_neg_score_data.csv'
+
+    if not os.path.exists(processed_data_file_name):
+        _, panas_negative_diff, _, _ = get_panas_score(dataset_path)
+        #taking only flourishing_score_diff for now
+        df = pd.DataFrame.from_dict(panas_negative_diff, orient='index')
+        df.columns = ['neg_panas']
+        add_input_features(df)
+        df.to_csv(processed_data_file_name, header=True)
+    else:
+        print('did not read original files')
+        df = pd.read_csv(processed_data_file_name, index_col = 0)
+
+    convert_to_binary_label(df, 'neg_panas')
+
+    for feature in df.columns[1:]:
+        normalize_feature(df, feature)
+
+    feature_data, label_data = get_features_and_labels(df)
+
+    train_feature_data, test_feature_data, train_label_data, test_label_data = train_test_split(feature_data, label_data, test_size = 0.2, random_state = 1)
+
+
+    model = LogisticRegression(solver = 'liblinear')
+    model.fit(train_feature_data, train_label_data)
+
+    train_pred = model.predict(train_feature_data)
+    train_pred_prob = np.array([val[1] for val in model.predict_proba(train_feature_data)])  
+    test_pred = model.predict(test_feature_data)
+    test_pred_prob = np.array([val[1] for val in model.predict_proba(test_feature_data)])
+
+    get_metric_scores(train_label_data, train_pred_prob, train_pred, test_label_data, test_pred_prob, test_pred)
+
+    print('****************************************')
+
 
 def get_metric_scores(train_label_data, train_pred_prob, train_pred, test_label_data, test_pred_prob, test_pred):
     auc = roc_auc_score(train_label_data, train_pred_prob)
@@ -254,13 +341,20 @@ def get_metric_scores(train_label_data, train_pred_prob, train_pred, test_label_
     auc = roc_auc_score(test_label_data, test_pred_prob)
     print('Test AUC : ', auc)
 
-    accuracy = accuracy_score(train_label_data, train_pred)
-    print('Train accuracy : ', accuracy)
-    accuracy = accuracy_score(test_label_data, test_pred)
-    print('Test accuracy : ', accuracy)
+    # accuracy = accuracy_score(train_label_data, train_pred)
+    # print('Train accuracy : ', accuracy)
+    # accuracy = accuracy_score(test_label_data, test_pred)
+    # print('Test accuracy : ', accuracy)
 
 
+def plot_feature_vs_label(feature_data, label):
+    pass
+    
 if __name__ == '__main__':
     predict_flourishing_score()
+
+    predict_panas_pos()
+
+    predict_panas_neg()
 
 

@@ -100,7 +100,7 @@ def get_activity_time(file_path):
         last_activity = numpy_matrix[0][1]
         for i in range(1, numpy_matrix.shape[0]):
             if numpy_matrix[i, 1] != last_activity:
-                total_activity_time[int(last_activity)] += (numpy_matrix[i-1, 0] - last_activity_initial_time)
+                total_activity_time[int(last_activity)] += (numpy_matrix[i, 0] - last_activity_initial_time)
                 last_activity_initial_time = numpy_matrix[i, 0]        
                 last_activity = numpy_matrix[i, 1]
         total_activity_time[int(last_activity)] += (numpy_matrix[i-1, 0] - last_activity_initial_time)
@@ -140,7 +140,7 @@ def get_audio_time(file_path):
         last_audio_type = numpy_matrix[0][1]
         for i in range(1, numpy_matrix.shape[0]):
             if numpy_matrix[i, 1] != last_audio_type:
-                total_audio_type_time[int(last_audio_type)] += (numpy_matrix[i-1, 0] - last_audio_type_initial_time)
+                total_audio_type_time[int(last_audio_type)] += (numpy_matrix[i, 0] - last_audio_type_initial_time)
                 last_audio_type_initial_time = numpy_matrix[i, 0]        
                 last_audio_type = numpy_matrix[i, 1]
         total_audio_type_time[int(last_audio_type)] += (numpy_matrix[i-1, 0] - last_audio_type_initial_time)

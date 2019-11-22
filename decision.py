@@ -219,7 +219,7 @@ def get_wifi_location(file_path):
 
         fea = [count_in_ratio, count_near_ratio, total_length, location_encountered]
         user_name = path.split('_')[2].replace('.csv', '')
-        conv_feats[user_name] = fea;
+        conv_feats[user_name] = fea
 
     return conv_feats
 

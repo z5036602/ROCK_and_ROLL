@@ -149,41 +149,109 @@ def get_audio_time(file_path):
     return audio_type_data, feature_names
 
 
-def get_end_minus_start_data(file_path):
+def get_conversation_data(file_path):
     all_path = os.listdir(file_path)
-    diff_data = {}
+    conv_feats = {}
+    feature_names = ['total_conversation_sec', 'total_conversation_count']
+    fea = [] 
     for path in all_path:
-        csv_full_path = os.path.join(file_path, path)
+        csv_full_path = os.path.join(file_path,path)
         df = pd.read_csv(csv_full_path)
-        numpy_matrix = df.dropna().to_numpy()
-        diff_time = sum(numpy_matrix[:, 1] - numpy_matrix[:, 0])
+        duration= df[' end_timestamp']-df['start_timestamp']
+        total_dur = sum(duration)
+        freq_conv = df['start_timestamp'].count()
+        fea = [total_dur,freq_conv]
         user_name = path.split('_')[1].replace('.csv','')
-        diff_data[user_name] = [diff_time]
-    return diff_data
+        conv_feats[user_name] = fea;
+    return conv_feats, feature_names
 
-if __name__ == '__main__':
-    dataset_path = os.getcwd()
-    input_data_path = os.path.join(dataset_path, 'StudentLife_Dataset/Inputs/sensing')
+def get_dark_time_data(file_path):
+    all_path = os.listdir(file_path)
+    conv_feats = {}
+    feature_names = ['total_dark_time_sec', 'total_dark_time_count']
+    fea = [] 
+    for path in all_path:
+        csv_full_path = os.path.join(file_path,path)
+        df = pd.read_csv(csv_full_path)
+        duration= df['end']-df['start']
+        total_dur = sum(duration)
+        freq_conv = df['end'].count()
+        fea = [total_dur,freq_conv]
+        user_name = path.split('_')[1].replace('.csv','')
+        conv_feats[user_name] = fea;
+    return conv_feats, feature_names
 
-    activity_data = get_activity_data(os.path.join(input_data_path, 'activity/'))
-    print(activity_data)
+def get_phone_charge_data(file_path):
+    all_path = os.listdir(file_path)
+    conv_feats = {}
+    feature_names = ['total_phone_charge_sec', 'total_phone_charge_count']
+    fea = [] 
+    for path in all_path:
+        csv_full_path = os.path.join(file_path,path)
+        df = pd.read_csv(csv_full_path)
+        duration= df['end']-df['start']
+        total_dur = sum(duration)
+        freq_conv = df['end'].count()
+        fea = [total_dur,freq_conv]
+        user_name = path.split('_')[1].replace('.csv','')
+        conv_feats[user_name] = fea;
+    return conv_feats, feature_names
 
-    activity_time, act_features = get_activity_time(os.path.join(input_data_path, 'activity/'))    
-    print(activity_time)
-    print(type(activity_time))
-    print(act_features)  
+def get_phone_lock_data(file_path):
+    all_path = os.listdir(file_path)
+    conv_feats = {}
+    feature_names = ['total_phone_lock_sec', 'total_phone_lock_count']
+    fea = [] 
+    for path in all_path:
+        csv_full_path = os.path.join(file_path,path)
+        df = pd.read_csv(csv_full_path)
+        duration= df['end']-df['start']
+        total_dur = sum(duration)
+        freq_conv = df['end'].count()
+        fea = [total_dur,freq_conv]
+        user_name = path.split('_')[1].replace('.csv','')
+        conv_feats[user_name] = fea;
+    return conv_feats, feature_names
 
-    audio_time, aud_features = get_audio_time(os.path.join(input_data_path, 'audio/'))
-    print(audio_time)
 
-    conversation_time = get_end_minus_start_data(os.path.join(input_data_path, 'conversation/'))
-    print(conversation_time)
+def get_bluetooth_data(file_path):
+    all_path = os.listdir(file_path)
+    conv_feats = {}
+    feature_names = ['uniq_MAC_id_count']
+    fea = [] 
+    for path in all_path:
+        csv_full_path = os.path.join(file_path,path)
+        df = pd.read_csv(csv_full_path)
+        MAC_encountered = len(df['MAC'].unique())
+        fea = [MAC_encountered]
+        user_name = path.split('_')[1].replace('.csv','')
+        conv_feats[user_name] = fea;
+    return conv_feats, feature_names
 
-    dark_time = get_end_minus_start_data(os.path.join(input_data_path, 'dark/'))
-    print(conversation_time)
+        
+def get_indoor_outdoor_data(file_path):
+    all_path = os.listdir(file_path)
+    conv_feats = {}
+    feature_names = ['indoor_count_ratio', 'outdoor_count_ratio']
+    fea = [] 
+    for path in all_path:
+        csv_full_path = os.path.join(file_path,path)
+        df = pd.read_csv(csv_full_path)
+        total_length = df['time'].count()
+        
+        count_in = 0
+        count_near = 0
 
-    phcharge_time = get_end_minus_start_data(os.path.join(input_data_path, 'phonecharge/'))
-    print(phcharge_time)
-
-    phonelock_time = get_end_minus_start_data(os.path.join(input_data_path, 'phonelock/'))
-    print(phonelock_time)
+        for item in df['time']:
+            if('in[' in item):
+                count_in+=1
+            if('near[' in item):
+                count_near+=1
+        count_in_ratio = count_in/total_length
+        count_near_ratio = count_near/total_length
+        fea = [count_in_ratio,count_near_ratio]
+        
+        user_name = path.split('_')[2].replace('.csv','')
+        conv_feats[user_name] = fea;
+        
+    return conv_feats, feature_names

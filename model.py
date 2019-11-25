@@ -36,7 +36,6 @@ def add_input_features(df):
     df = add_feature_to_dataframe(df, *get_audio_time(os.path.join(input_data_path, 'audio/')))  
     df = add_feature_to_dataframe(df, *get_conversation_data(os.path.join(input_data_path, 'conversation/')))   
     df = add_feature_to_dataframe(df, *get_dark_time_data(os.path.join(input_data_path, 'dark/')))
-    df = add_feature_to_dataframe(df, *get_phone_charge_data(os.path.join(input_data_path, 'phonecharge/')))
     df = add_feature_to_dataframe(df, *get_phone_lock_data(os.path.join(input_data_path, 'phonelock/')))
     df = add_feature_to_dataframe(df, *get_bluetooth_data(os.path.join(input_data_path, 'bluetooth/')))
     df = add_feature_to_dataframe(df, *get_indoor_outdoor_data(os.path.join(input_data_path, 'wifi_location/')))

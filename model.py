@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from data_extractor import *
 
 def normalize_feature(df, feature_name):
-    df[feature_name] = (df[feature_name] - min(df[feature_name])) / (max(df[feature_name]) - min(df[feature_name]))
+    df[feature_name] = (df[feature_name] - df[feature_name].mean()) / df[feature_name].std()
     return None
 
 def convert_to_binary_label(df, feature_name):
